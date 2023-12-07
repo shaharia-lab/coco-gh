@@ -183,19 +183,19 @@ func (c *GitHubClient) getChangedFilePathsForRepo(ctx context.Context, repo stri
 		}
 
 		for _, file := range commitDetails.Files {
-			if strings.HasPrefix(*file.Filename, directory) {
+			if strings.HasPrefix(file.GetFilename(), directory) {
 				switch file.GetStatus() {
 				case "removed":
-					paths.Removed = append(paths.Removed, *file.Filename)
+					paths.Removed = append(paths.Removed, file.GetFilename())
 				case "added":
-					paths.Added = append(paths.Added, *file.Filename)
+					paths.Added = append(paths.Added, file.GetFilename())
 				case "modified", "changed":
-					paths.Modified = append(paths.Modified, *file.Filename)
+					paths.Modified = append(paths.Modified, file.GetFilename())
 				case "renamed":
-					paths.Removed = append(paths.Removed, *file.PreviousFilename)
-					paths.Added = append(paths.Modified, *file.Filename)
+					paths.Removed = append(paths.Removed, file.GetPreviousFilename())
+					paths.Added = append(paths.Added, file.GetFilename())
 				case "copied":
-					paths.Added = append(paths.Modified, *file.Filename)
+					paths.Added = append(paths.Added, file.GetFilename())
 				}
 			}
 		}

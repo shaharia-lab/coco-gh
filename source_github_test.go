@@ -98,83 +98,88 @@ func (_m *GHClientMock) Query(ctx context.Context, q interface{}, variables map[
 }
 
 func TestGitHubClient_GetFilePathsForRepositories(t *testing.T) {
-	// Initialize a mock GitHub client
-	ghClient := new(GHClientMock)
+	type entry struct {
+		Name string
+		Path string
+		Type string
+	}
 
-	// Create a GitHub configuration
-	config := GitHubConfig{
-		Owner:         "testowner",
-		Repositories:  []string{"repo1", "repo2"},
-		DefaultBranch: "main",
-		Filter: GitHubFilter{
-			FilePath:  "path/to/files",
-			FileTypes: []string{".txt"},
+	tests := []struct {
+		name          string
+		config        GitHubConfig
+		entries       []entry
+		expectedFiles []string
+	}{
+		// Here we specify different test cases. For example:
+		{
+			name: "test 1",
+			config: GitHubConfig{
+				Owner:         "testowner1",
+				Repositories:  []string{"repo1", "repo2"},
+				DefaultBranch: "main1",
+				Filter: GitHubFilter{
+					FilePath:  "path/to/files",
+					FileTypes: []string{".txt"},
+				},
+			},
+			entries: []entry{
+				{"File1", "path/to/files/file1.txt", "blob"},
+				{"File2", "path/to/files/file2.txt", "blob"},
+			},
+			expectedFiles: []string{
+				"path/to/files/file1.txt",
+				"path/to/files/file2.txt",
+				"path/to/files/file1.txt",
+				"path/to/files/file2.txt",
+			},
 		},
+		// ...more test cases...
 	}
 
-	// Create a GitHub client with the mock client and configuration
-	client := NewGitHubClient(ghClient, config)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Initialize a mock GitHub client
+			ghClient := new(GHClientMock)
 
-	// Create entries and populate them
-	entry1 := struct {
-		Name string
-		Path string
-		Type string
-	}{
-		Name: "File1",
-		Path: "path/to/files/file1.txt",
-		Type: "blob",
-	}
+			// Create a GitHub client with the mock client and configuration
+			client := NewGitHubClient(ghClient, tt.config)
 
-	entry2 := struct {
-		Name string
-		Path string
-		Type string
-	}{
-		Name: "File2",
-		Path: "path/to/files/file2.txt",
-		Type: "blob",
-	}
+			// Set up the mock to return the query object and populate Entries
+			ghClient.On("Query", mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
+				arg := args.Get(1).(*GHQueryForListFiles)
 
-	// Set up the mock to return the query object and populate Entries
-	ghClient.On("Query", mock.Anything, mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
-		arg := args.Get(1).(*GHQueryForListFiles)
-		// Populate Entries here as needed
-		arg.Repository.Object.Tree.Entries = append(arg.Repository.Object.Tree.Entries, entry1, entry2)
-	}).Return(nil)
+				// Populate Entries here as needed
+				for _, entry := range tt.entries {
+					arg.Repository.Object.Tree.Entries = append(arg.Repository.Object.Tree.Entries, entry)
+				}
+			}).Return(nil)
 
-	// Call the method to get file paths for repositories
-	files, err := client.GetFilePathsForRepositories()
+			// Call the method to get file paths for repositories
+			files, err := client.GetFilePathsForRepositories()
 
-	// Verify the results
-	if err != nil {
-		t.Errorf("Error occurred: %v", err)
-	}
+			// Verify the results
+			if err != nil {
+				t.Errorf("Error occurred: %v", err)
+			}
 
-	// duplicated files because of numnber of repositories for each entry
-	expectedFiles := []string{
-		"path/to/files/file1.txt",
-		"path/to/files/file2.txt",
-		"path/to/files/file1.txt",
-		"path/to/files/file2.txt",
-	}
-
-	for _, expectedFile := range expectedFiles {
-		if !contains(files, expectedFile) {
-			t.Errorf("Expected file not found: %s", expectedFile)
-		}
+			for _, expectedFile := range tt.expectedFiles {
+				if !contains(files, expectedFile) {
+					t.Errorf("Expected file not found: %s", expectedFile)
+				}
+			}
+		})
 	}
 }
 
 func TestGitHubClient_GetChangedFilePathsSince(t *testing.T) {
 	tests := []struct {
-		name   string
-		config GitHubConfig
-		hour   int
-		want   Paths
+		name            string
+		config          GitHubConfig
+		detectedChanges []*github.CommitFile
+		want            Paths
 	}{
 		{
-			name: "Check for changed file paths since 1 hour ago",
+			name: "Check for changed file paths",
 			config: GitHubConfig{
 				Owner:         "testowner",
 				Repositories:  []string{"repo1", "repo2"},
@@ -184,11 +189,64 @@ func TestGitHubClient_GetChangedFilePathsSince(t *testing.T) {
 					FileTypes: []string{".txt"},
 				},
 			},
-			hour: 1,
+			detectedChanges: []*github.CommitFile{
+				{
+					Filename: github.String("path/to/files/file1.txt"),
+					Status:   github.String("added"),
+				},
+				{
+					Filename: github.String("path/to/files/file2.txt"),
+					Status:   github.String("modified"),
+				},
+			},
 			want: Paths{
 				Added:    []string{"path/to/files/file1.txt", "path/to/files/file1.txt"},
 				Removed:  []string{},
 				Modified: []string{"path/to/files/file2.txt", "path/to/files/file2.txt"},
+			},
+		},
+		{
+			name: "change detected some files with different statuses",
+			config: GitHubConfig{
+				Owner:         "testowner",
+				Repositories:  []string{"repo1"},
+				DefaultBranch: "main",
+				Filter: GitHubFilter{
+					FilePath:  "path/to/files",
+					FileTypes: []string{".txt"},
+				},
+			},
+			detectedChanges: []*github.CommitFile{
+				{
+					Filename: github.String("path/to/files/file_removed.txt"),
+					Status:   github.String("removed"),
+				},
+				{
+					Filename: github.String("path/to/files/file_modified.txt"),
+					Status:   github.String("modified"),
+				},
+				{
+					Filename: github.String("path/to/files/file_added.txt"),
+					Status:   github.String("added"),
+				},
+				{
+					Filename: github.String("path/to/files/file_changed.txt"),
+					Status:   github.String("changed"),
+				},
+				{
+					Filename:         github.String("path/to/files/file_renamed.txt"),
+					PreviousFilename: github.String("path/to/files/file_previous.txt"),
+					Status:           github.String("renamed"),
+				},
+				{
+					Filename: github.String("path/to/files/file_copied.txt"),
+					Status:   github.String("copied"),
+				},
+			},
+			want: Paths{
+				Added:    []string{"path/to/files/file_added.txt", "path/to/files/file_renamed.txt", "path/to/files/file_copied.txt"},
+				Removed:  []string{"path/to/files/file_removed.txt", "path/to/files/file_previous.txt"},
+				Modified: []string{"path/to/files/file_modified.txt", "path/to/files/file_changed.txt"},
 			},
 		},
 	}
@@ -199,19 +257,10 @@ func TestGitHubClient_GetChangedFilePathsSince(t *testing.T) {
 			ghClient.On("ListCommits", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]*github.RepositoryCommit{{
 				SHA: github.String("1234567890"),
 			}}, nil, nil)
-			ghClient.On("GetCommit", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&github.RepositoryCommit{Files: []*github.CommitFile{
-				{
-					Filename: github.String("path/to/files/file1.txt"),
-					Status:   github.String("added"),
-				},
-				{
-					Filename: github.String("path/to/files/file2.txt"),
-					Status:   github.String("modified"),
-				},
-			}}, nil, nil)
+			ghClient.On("GetCommit", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&github.RepositoryCommit{Files: tt.detectedChanges}, nil, nil)
 
 			client := NewGitHubClient(ghClient, tt.config)
-			paths, err := client.GetChangedFilePathsSince(tt.hour)
+			paths, err := client.GetChangedFilePathsSince(1)
 
 			if err != nil {
 				t.Errorf("Error occurred: %v", err)
