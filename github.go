@@ -78,18 +78,29 @@ func (gClient *GitHubCommitsOpsClient) ListCommits(ctx context.Context, owner, r
 
 // GetCommit retrieves a specific commit from a repository.
 //
-// ctx is the context.Context used for the API call.
+// Parameters:
+//   - ctx: The context.Context used for the API call. It allows you to cancel
+//     the request, set deadlines, etc.
+//   - owner: The username or organization name of the repository owner. This
+//     string identifies the owner of the repository.
+//   - repo: The name of the repository. It specifies which repository's commit
+//     is being retrieved.
+//   - sha: The SHA hash of the commit. This string uniquely identifies the commit
+//     within the repository.
+//   - opts: Optional parameters for the API call, provided as a pointer to
+//     github.ListOptions. This includes pagination options.
 //
-// owner is the username or organization name of the repository owner.
+// Returns:
+//   - *github.RepositoryCommit: The retrieved commit information, including details
+//     like the commit message, author, etc.
+//   - *github.Response: The HTTP response from the API call. This includes
+//     information like the status code and headers.
+//   - error: An error instance if an error occurs during the API call. It will be
+//     nil if the call is successful.
 //
-// repo is the name of the repository.
+// Example:
 //
-// sha is the SHA of the commit.
-//
-// opts specifies optional parameters for the API call.
-//
-// The function returns the retrieved commit information as a *github.RepositoryCommit,
-// the HTTP response as *github.Response, and an error if any.
+//	commit, resp, err := gClient.GetCommit(ctx, "octocat", "hello-world", "6dcb09b5b57875f334f61aebed695e2e4193db5e", nil)
 func (gClient *GitHubCommitsOpsClient) GetCommit(ctx context.Context, owner, repo, sha string, opts *github.ListOptions) (*github.RepositoryCommit, *github.Response, error) {
 	return gClient.GitHubClient.Repositories.GetCommit(ctx, owner, repo, sha, opts)
 }
@@ -119,33 +130,31 @@ type GHQueryForListFiles struct {
 // The new GitHub client is initialized with the provided CommitOpsClient, GraphQLClient, and GitHubConfig.
 // The GitHub client can be used to interact with the GitHub API and perform various operations, such as retrieving file paths for repositories
 // and getting changed file paths since a specified time.
-// Usage example:
-// ```
-// commitOpsClient := NewGitHubCommitsOpsClient()
-// graphQLClient := NewGraphQLClient()
+// Usage:
 //
-//	config := GitHubConfig{
-//	    Owner:         "testowner",
-//	    Repositories:  []string{"repo1", "repo2"},
-//	    DefaultBranch: "main",
-//	    Filter: GitHubFilter{
-//	        FilePath:  "path/to/files",
-//	        FileTypes: []string{".txt"},
-//	    },
-//	}
+//	 commitOpsClient := NewGitHubCommitsOpsClient()
+//	 graphQLClient := NewGraphQLClient()
 //
-// githubClient := NewGitHubClient(commitOpsClient, graphQLClient, config)
-// filepaths, err := githubClient.GetFilePathsForRepositories()
+//		config := GitHubConfig{
+//		    Owner:         "testowner",
+//		    Repositories:  []string{"repo1", "repo2"},
+//		    DefaultBranch: "main",
+//		    Filter: GitHubFilter{
+//		        FilePath:  "path/to/files",
+//		        FileTypes: []string{".txt"},
+//		    },
+//		}
 //
-//	if err != nil {
-//	    log.Fatal(err)
-//	}
+//	 githubClient := NewGitHubClient(commitOpsClient, graphQLClient, config)
+//	 filepaths, err := githubClient.GetFilePathsForRepositories()
 //
-//	for _, path := range filepaths {
-//	    fmt.Println(path)
-//	}
+//		if err != nil {
+//		    log.Fatal(err)
+//		}
 //
-// ```
+//		for _, path := range filepaths {
+//		    fmt.Println(path)
+//		}
 func NewGitHubClient(commitOpsClient CommitOpsClient, graphQLClient GraphQLClient, configuration GitHubConfig) *GitHub {
 	return &GitHub{
 		commitOpsClient: commitOpsClient,
@@ -161,7 +170,6 @@ func NewGitHubClient(commitOpsClient CommitOpsClient, graphQLClient GraphQLClien
 // If there's an error during the process, it returns nil and the error.
 //
 // Usage:
-// ```
 //
 //	repos := []string{"repo1", "repo2", "repo3"}
 //	filePaths, err := GetFilePathsForRepositories(repos)
@@ -174,8 +182,6 @@ func NewGitHubClient(commitOpsClient CommitOpsClient, graphQLClient GraphQLClien
 //	        fmt.Println(path)
 //	    }
 //	}
-//
-// ```
 func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
 	var files []string
 	for _, repo := range c.Configuration.Repositories {
@@ -201,34 +207,34 @@ func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
 	return filteredFiles, nil
 }
 
-// GetChangedFilePathsSince retrieves the list of file paths that have changed in the specified repositories within the specified time frame.
-// It takes the number of hours as input and returns a Paths object containing the lists of added, removed, and modified file paths.
-// The function iterates over the repositories defined in the GitHub configuration and calls the getChangedFilePathsForRepo function to get the file paths for each repository.
-// It then aggregates the file paths from all repositories into a single Paths object and returns it.
-// The function uses the specified time frame and file path filter defined in the GitHub configuration to fetch the changed file paths.
-// It uses the GitHub commit operations client to fetch the commits and commit details for each repository.
-// Finally, it filters the file paths based on the directory filter and populates the added, removed, and modified lists in the Paths object accordingly.
+// GetChangedFilePathsSince retrieves the list of file paths that have changed in the specified repositories
+// within the specified time frame. The function iterates over repositories defined in the GitHub configuration
+// and uses the GitHub commit operations client to fetch the commits and commit details for each repository.
+// It aggregates the file paths from all repositories into a single Paths object. The function filters these file
+// paths based on the directory filter and the specified time frame and file path filter defined in the GitHub
+// configuration. The Paths object is populated with lists of added, removed, and modified file paths accordingly.
 //
 // Parameters:
-// - hoursSince: The number of hours since the specified time to consider for fetching changed file paths.
+//   - hoursSince: An integer representing the number of hours since the specified time. This parameter is used
+//     to determine the time frame for fetching changed file paths.
 //
 // Returns:
-// - Paths: A Paths object containing the lists of added, removed, and modified file paths.
-// - error: An error, if any occurred during the execution of the function.
+//   - Paths: A struct containing lists of added, removed, and modified file paths. This struct provides an
+//     organized way to access the changed files.
+//   - error: An error instance if an error occurs during the execution of the function. It will be nil if
+//     the function executes successfully.
 //
 // Usage:
-// ```
 //
-//	const sinceHours = "24"
-//	changedFiles, err := GetChangedFilePathsSince(sinceHours)
+//	const sinceHours = 24
+//	changedFiles, err := c.GetChangedFilePathsSince(sinceHours)
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
 //
-// fmt.Println(file.Added)
-// fmt.Println(file.Modified)
-// fmt.Println(file.Removed)
-// ```
+//	fmt.Println("Added files:", changedFiles.Added)
+//	fmt.Println("Modified files:", changedFiles.Modified)
+//	fmt.Println("Removed files:", changedFiles.Removed)
 func (c *GitHub) GetChangedFilePathsSince(hoursSince int) (Paths, error) {
 	ctx := context.Background()
 
@@ -259,18 +265,36 @@ func (c *GitHub) GetChangedFilePathsSince(hoursSince int) (Paths, error) {
 	return paths, nil
 }
 
-// getFilePathsForRepo fetches the list of file paths for a specific repository, starting from the specified expression.
-// It recursively traverses the repository tree, appending file paths to the resulting slice, and returns the slice of file paths.
-// If any error occurs during the GraphQL query or traversal, it returns nil and the error.
-// The owner parameter specifies the repository owner's username.
-// The name parameter specifies the repository name.
-// The expression parameter specifies the starting expression for traversing the repository tree.
-// It uses the GitHub GraphQL API to retrieve the repository tree entries and their types.
-// If an entry is a blob, its path is appended to the files slice.
-// If an entry is a tree, the function recursively calls itself with the updated expression and appends the returned subfiles to the files slice.
+// getFilePathsForRepo fetches the list of file paths for a specific repository, starting from the specified
+// expression. It uses the GitHub GraphQL API to retrieve the repository tree entries and their types, and
+// recursively traverses the repository tree. The function appends file paths to a slice, which is then returned.
+// If an entry is a blob, its path is added to the files slice. For tree entries, the function recurses with
+// the updated expression and appends the returned subfiles to the files slice. If any error occurs during
+// the GraphQL query or traversal, the function returns nil and the error.
+//
+// Parameters:
+//   - owner: A string representing the username of the repository owner. This parameter specifies the owner
+//     of the repository for which file paths are being fetched.
+//   - name: A string representing the name of the repository. This parameter is used to specify the repository
+//     from which the file paths are retrieved.
+//   - expression: A string specifying the starting expression for traversing the repository tree. This
+//     expression determines the starting point of the file path retrieval process.
+//
 // Returns:
-// - files: The slice of file paths in the repository.
-// - error: Any error that occurred during the GraphQL query or traversal.
+//   - files: A slice of strings, each representing a file path in the repository. This slice includes paths
+//     to all files found in the repository starting from the given expression.
+//   - error: An error instance, if any error occurred during the GraphQL query or traversal. It will be nil
+//     if the function executes successfully.
+//
+// Example usage:
+//
+//	filePaths, err := c.getFilePathsForRepo("octocat", "hello-world", "master:")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	for _, path := range filePaths {
+//	    fmt.Println(path)
+//	}
 func (c *GitHub) getFilePathsForRepo(owner, name, expression string) ([]string, error) {
 	var query GHQueryForListFiles
 	variables := map[string]interface{}{
