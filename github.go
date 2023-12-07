@@ -38,7 +38,7 @@ type GitHubConfig struct {
 	Filter        GitHubFilter
 }
 
-// GitHub stores a repo's GitHub client and its related configurations.
+// GitHub stores CommitOpsClient, GraphQLClient and configuration.
 type GitHub struct {
 	Configuration GitHubConfig
 
@@ -51,7 +51,7 @@ type GraphQLClient interface {
 	Query(ctx context.Context, q interface{}, variables map[string]interface{}) error
 }
 
-// CommitOpsClient is an interface to help test the GitHub GraphQLClient.
+// CommitOpsClient is an interface to help test the GitHub GitHubCommitsOpsClient.
 type CommitOpsClient interface {
 	ListCommits(ctx context.Context, owner, repo string, opts *github.CommitsListOptions) ([]*github.RepositoryCommit, *github.Response, error)
 	GetCommit(ctx context.Context, owner, repo, sha string, opts *github.ListOptions) (*github.RepositoryCommit, *github.Response, error)
