@@ -32,14 +32,14 @@ type GitHubConfig struct {
 	Filter        GitHubFilter
 }
 
-// GitHubClient stores a repo's GitHub client and its related configurations.
-type GitHubClient struct {
-	Client        GHClient
+// GitHub stores a repo's GitHub client and its related configurations.
+type GitHub struct {
+	Client        Client
 	Configuration GitHubConfig
 }
 
-// GHClient is an interface to help test the GitHub Client.
-type GHClient interface {
+// Client is an interface to help test the GitHub Client.
+type Client interface {
 	Query(ctx context.Context, q interface{}, variables map[string]interface{}) error
 	ListCommits(ctx context.Context, owner, repo string, opts *github.CommitsListOptions) ([]*github.RepositoryCommit, *github.Response, error)
 	GetCommit(ctx context.Context, owner, repo, sha string, opts *github.ListOptions) (*github.RepositoryCommit, *github.Response, error)
@@ -60,16 +60,16 @@ type GHQueryForListFiles struct {
 	} `graphql:"repository(owner: $owner, name: $name)"`
 }
 
-// NewGitHubClient creates a new GitHubClient with the given GHClient and configuration.
-func NewGitHubClient(ghClient GHClient, configuration GitHubConfig) *GitHubClient {
-	return &GitHubClient{
+// NewGitHubClient creates a new GitHub with the given Client and configuration.
+func NewGitHubClient(ghClient Client, configuration GitHubConfig) *GitHub {
+	return &GitHub{
 		Client:        ghClient,
 		Configuration: configuration,
 	}
 }
 
-// GetFilePathsForRepositories fetches the file paths from all the repositories specified in the GitHubClient.
-func (c *GitHubClient) GetFilePathsForRepositories() ([]string, error) {
+// GetFilePathsForRepositories fetches the file paths from all the repositories specified in the GitHub.
+func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
 	var files []string
 	for _, repo := range c.Configuration.Repositories {
 		fs, err := c.getFilePathsForRepo(c.Configuration.Owner, repo, fmt.Sprintf("%s:%s", c.Configuration.DefaultBranch, c.Configuration.Filter.FilePath))
@@ -95,7 +95,7 @@ func (c *GitHubClient) GetFilePathsForRepositories() ([]string, error) {
 }
 
 // GetChangedFilePathsSince fetches the file paths from all repositories that have been changed in the specified duration (in hours).
-func (c *GitHubClient) GetChangedFilePathsSince(hoursSince int) (Paths, error) {
+func (c *GitHub) GetChangedFilePathsSince(hoursSince int) (Paths, error) {
 	ctx := context.Background()
 
 	now := time.Now()
@@ -126,7 +126,7 @@ func (c *GitHubClient) GetChangedFilePathsSince(hoursSince int) (Paths, error) {
 }
 
 // getFilePathsForRepo fetches the file paths in a GitHub repository.
-func (c *GitHubClient) getFilePathsForRepo(owner, name, expression string) ([]string, error) {
+func (c *GitHub) getFilePathsForRepo(owner, name, expression string) ([]string, error) {
 	var query GHQueryForListFiles
 	variables := map[string]interface{}{
 		"owner":      githubv4.String(owner),
@@ -156,7 +156,7 @@ func (c *GitHubClient) getFilePathsForRepo(owner, name, expression string) ([]st
 }
 
 // hasFileType determines if a filename ends with certain file types.
-func (c *GitHubClient) hasFileType(fileName string, fileTypes []string) bool {
+func (c *GitHub) hasFileType(fileName string, fileTypes []string) bool {
 	for _, fileType := range fileTypes {
 		if strings.HasSuffix(fileName, fileType) {
 			return true
@@ -166,7 +166,7 @@ func (c *GitHubClient) hasFileType(fileName string, fileTypes []string) bool {
 }
 
 // getChangedFilePathsForRepo fetches the file paths in a repository that have been changed.
-func (c *GitHubClient) getChangedFilePathsForRepo(ctx context.Context, repo string, opt *github.CommitsListOptions) (Paths, error) {
+func (c *GitHub) getChangedFilePathsForRepo(ctx context.Context, repo string, opt *github.CommitsListOptions) (Paths, error) {
 	var paths Paths
 
 	commits, _, err := c.Client.ListCommits(ctx, c.Configuration.Owner, repo, opt)
