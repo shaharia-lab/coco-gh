@@ -76,7 +76,7 @@ func main() {
    ch := NewGitHubClient(ghCommitsOpsClient, graphQLClient, ghConfig)
 
    // Get all the file paths from the repositories
-   allFilePaths, err := ch.GetFilePathsForRepositories()
+   allFilePaths, err := ch.GetFilePathsFromRepositories()
    if err != nil {
       // handle errors
    }
@@ -86,7 +86,7 @@ func main() {
    }
 
    // Get the list of files that were changed in the last X hours
-   contentChanged, err := ch.GetChangedFilesSince(time.Now())
+   contentChanged, err := ch.GetChangedFilePathsSince(time.Now())
    if err != nil {
       // handle errors
    }

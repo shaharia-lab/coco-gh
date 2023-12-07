@@ -12,6 +12,22 @@ import (
 	"github.com/shurcooL/githubv4"
 )
 
+// GHQueryForListFiles is a struct representing the GraphQL query for listing files in a GitHub repository.
+// It contains the information necessary to make the query, including the owner, name, expression, and path of the repository.
+type GHQueryForListFiles struct {
+	Repository struct {
+		Object struct {
+			Tree struct {
+				Entries []struct {
+					Name string
+					Path string
+					Type string
+				}
+			} `graphql:"... on Tree"`
+		} `graphql:"object(expression: $expression)"`
+	} `graphql:"repository(owner: $owner, name: $name)"`
+}
+
 // Paths represents a collection of file paths that have been added, removed, or modified.
 type Paths struct {
 	Added    []string
@@ -105,22 +121,6 @@ func (gClient *GitHubCommitsOpsClient) GetCommit(ctx context.Context, owner, rep
 	return gClient.GitHubClient.Repositories.GetCommit(ctx, owner, repo, sha, opts)
 }
 
-// GHQueryForListFiles is a struct representing the GraphQL query for listing files in a GitHub repository.
-// It contains the information necessary to make the query, including the owner, name, expression, and path of the repository.
-type GHQueryForListFiles struct {
-	Repository struct {
-		Object struct {
-			Tree struct {
-				Entries []struct {
-					Name string
-					Path string
-					Type string
-				}
-			} `graphql:"... on Tree"`
-		} `graphql:"object(expression: $expression)"`
-	} `graphql:"repository(owner: $owner, name: $name)"`
-}
-
 // NewGitHubClient creates a new instance of the GitHub client.
 // It takes a CommitOpsClient, GraphQLClient, and GitHubConfig as parameters and returns a pointer to a GitHub struct.
 // The CommitOpsClient is responsible for making REST API calls to the GitHub API.
@@ -146,7 +146,7 @@ type GHQueryForListFiles struct {
 //		}
 //
 //	 githubClient := NewGitHubClient(commitOpsClient, graphQLClient, config)
-//	 filepaths, err := githubClient.GetFilePathsForRepositories()
+//	 filepaths, err := githubClient.GetFilePathsFromRepositories()
 //
 //		if err != nil {
 //		    log.Fatal(err)
@@ -163,7 +163,7 @@ func NewGitHubClient(commitOpsClient CommitOpsClient, graphQLClient GraphQLClien
 	}
 }
 
-// GetFilePathsForRepositories retrieves the file paths for the repositories specified in the GitHub configuration.
+// GetFilePathsFromRepositories retrieves the file paths for the repositories specified in the GitHub configuration.
 // It iterates over each repository, calls the getFilePathsForRepo method to get the file paths, and appends them to the files slice.
 // If there are no file types specified in the configuration, it returns the files directly.
 // Otherwise, it filters the files based on the file types specified in the configuration and returns the filtered files.
@@ -172,7 +172,7 @@ func NewGitHubClient(commitOpsClient CommitOpsClient, graphQLClient GraphQLClien
 // Usage:
 //
 //	repos := []string{"repo1", "repo2", "repo3"}
-//	filePaths, err := GetFilePathsForRepositories(repos)
+//	filePaths, err := GetFilePathsFromRepositories(repos)
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
@@ -182,7 +182,7 @@ func NewGitHubClient(commitOpsClient CommitOpsClient, graphQLClient GraphQLClien
 //	        fmt.Println(path)
 //	    }
 //	}
-func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
+func (c *GitHub) GetFilePathsFromRepositories() ([]string, error) {
 	var files []string
 	for _, repo := range c.Configuration.Repositories {
 		fs, err := c.getFilePathsForRepo(c.Configuration.Owner, repo, fmt.Sprintf("%s:%s", c.Configuration.DefaultBranch, c.Configuration.Filter.FilePath))
@@ -207,7 +207,7 @@ func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
 	return filteredFiles, nil
 }
 
-// GetChangedFilesSince retrieves the list of file paths that have changed in the specified repositories
+// GetChangedFilePathsSince retrieves the list of file paths that have changed in the specified repositories
 // within the specified time frame. The function iterates over repositories defined in the GitHub configuration
 // and uses the GitHub commit operations client to fetch the commits and commit details for each repository.
 // It aggregates the file paths from all repositories into a single Paths object. The function filters these file
@@ -227,7 +227,7 @@ func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
 // Usage:
 //
 //	const sinceHours = 24
-//	changedFiles, err := c.GetChangedFilesSince(sinceHours)
+//	changedFiles, err := c.GetChangedFilePathsSince(sinceHours)
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
@@ -235,7 +235,7 @@ func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
 //	fmt.Println("Added files:", changedFiles.Added)
 //	fmt.Println("Modified files:", changedFiles.Modified)
 //	fmt.Println("Removed files:", changedFiles.Removed)
-func (c *GitHub) GetChangedFilesSince(since time.Time) (Paths, error) {
+func (c *GitHub) GetChangedFilePathsSince(since time.Time) (Paths, error) {
 	ctx := context.Background()
 
 	opt := &github.CommitsListOptions{

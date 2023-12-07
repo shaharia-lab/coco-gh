@@ -103,7 +103,7 @@ func (_m *CommitOpsClientMock) ListCommits(ctx context.Context, owner string, re
 	return r0, r1, r2
 }
 
-func TestGitHubClient_GetFilePathsForRepositories(t *testing.T) {
+func TestGitHubClient_GetFilePathsFromRepositories(t *testing.T) {
 	type entry struct {
 		Name string
 		Path string
@@ -162,7 +162,7 @@ func TestGitHubClient_GetFilePathsForRepositories(t *testing.T) {
 			}).Return(nil)
 
 			// Call the method to get file paths for repositories
-			files, err := client.GetFilePathsForRepositories()
+			files, err := client.GetFilePathsFromRepositories()
 
 			// Verify the results
 			if err != nil {
@@ -178,7 +178,7 @@ func TestGitHubClient_GetFilePathsForRepositories(t *testing.T) {
 	}
 }
 
-func TestGitHubClient_GetChangedFilesSince(t *testing.T) {
+func TestGitHubClient_GetChangedFilePathsSince(t *testing.T) {
 	tests := []struct {
 		name            string
 		config          GitHubConfig
@@ -269,7 +269,7 @@ func TestGitHubClient_GetChangedFilesSince(t *testing.T) {
 
 			client := NewGitHubClient(commitOpsClient, ghClient, tt.config)
 
-			paths, err := client.GetChangedFilesSince(time.Now())
+			paths, err := client.GetChangedFilePathsSince(time.Now())
 
 			if err != nil {
 				t.Errorf("Error occurred: %v", err)
