@@ -1,5 +1,5 @@
 <h1 align="center">coco-gh</h1>
-<p align="center">A Utility Library for Golang Developer</p>
+<p align="center">A Go library to fetch contents from GitHub</p>
 
 <p align="center">
   <a href="https://pkg.go.dev/github.com/shaharia-lab/coco-gh"><img src="https://pkg.go.dev/badge/github.com/shaharia-lab/coco-gh.svg" height="20"/></a>
