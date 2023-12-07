@@ -45,54 +45,55 @@ import "github.com/shaharia-lab/coco-gh"
 package cocogh
 
 import (
-	"context"
-	"log"
+   "context"
+   "log"
+   "time"
 
-	"github.com/shurcooL/githubv4"
-	"golang.org/x/oauth2"
+   "github.com/shurcooL/githubv4"
+   "golang.org/x/oauth2"
 )
 
 func main() {
-	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
-	)
-	httpClient := oauth2.NewClient(context.Background(), src)
+   src := oauth2.StaticTokenSource(
+      &oauth2.Token{AccessToken: os.Getenv("GITHUB_TOKEN")},
+   )
+   httpClient := oauth2.NewClient(context.Background(), src)
 
-	ghCommitsOpsClient := NewGitHubCommitsOpsClient(httpClient)
-	graphQLClient := githubv4.NewClient(httpClient)
-	ghConfig := GitHubConfig{
-		Owner:         "kubernetes",
-		Repositories:  []string{"website"},
-		DefaultBranch: "main",
-		Filter: GitHubFilter{
-			FilePath: "content/en/blog/_posts",
-			FileTypes: []string{
-				".md",
-			},
-		},
-	}
+   ghCommitsOpsClient := NewGitHubCommitsOpsClient(httpClient)
+   graphQLClient := githubv4.NewClient(httpClient)
+   ghConfig := GitHubConfig{
+      Owner:         "kubernetes",
+      Repositories:  []string{"website"},
+      DefaultBranch: "main",
+      Filter: GitHubFilter{
+         FilePath: "content/en/blog/_posts",
+         FileTypes: []string{
+            ".md",
+         },
+      },
+   }
 
-	ch := NewGitHubClient(ghCommitsOpsClient, graphQLClient, ghConfig)
-	
-	// Get all the file paths from the repositories
-	allFilePaths, err := ch.GetFilePathsForRepositories()
-	if err != nil {
-		// handle errors
-	}
+   ch := NewGitHubClient(ghCommitsOpsClient, graphQLClient, ghConfig)
 
-	for _, path := range allFilePaths {
-		log.Println(path)
-	}
-	
-	// Get the list of files that were changed in the last X hours
-	contentChanged, err := ch.GetChangedFilePathsSince(24)
-	if err != nil {
-		// handle errors
-	}
+   // Get all the file paths from the repositories
+   allFilePaths, err := ch.GetFilePathsForRepositories()
+   if err != nil {
+      // handle errors
+   }
 
-	log.Println(contentChanged.Added)
-	log.Println(contentChanged.Modified)
-	log.Println(contentChanged.Removed)
+   for _, path := range allFilePaths {
+      log.Println(path)
+   }
+
+   // Get the list of files that were changed in the last X hours
+   contentChanged, err := ch.GetChangedFilesSince(time.Now())
+   if err != nil {
+      // handle errors
+   }
+
+   log.Println(contentChanged.Added)
+   log.Println(contentChanged.Modified)
+   log.Println(contentChanged.Removed)
 }
 ```
 

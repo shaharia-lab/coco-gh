@@ -3,6 +3,7 @@ package cocogh
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/go-github/v57/github"
 	"github.com/stretchr/testify/mock"
@@ -177,7 +178,7 @@ func TestGitHubClient_GetFilePathsForRepositories(t *testing.T) {
 	}
 }
 
-func TestGitHubClient_GetChangedFilePathsSince(t *testing.T) {
+func TestGitHubClient_GetChangedFilesSince(t *testing.T) {
 	tests := []struct {
 		name            string
 		config          GitHubConfig
@@ -267,7 +268,8 @@ func TestGitHubClient_GetChangedFilePathsSince(t *testing.T) {
 			commitOpsClient.On("GetCommit", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&github.RepositoryCommit{Files: tt.detectedChanges}, nil, nil)
 
 			client := NewGitHubClient(commitOpsClient, ghClient, tt.config)
-			paths, err := client.GetChangedFilePathsSince(1)
+
+			paths, err := client.GetChangedFilesSince(time.Now())
 
 			if err != nil {
 				t.Errorf("Error occurred: %v", err)

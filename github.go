@@ -207,7 +207,7 @@ func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
 	return filteredFiles, nil
 }
 
-// GetChangedFilePathsSince retrieves the list of file paths that have changed in the specified repositories
+// GetChangedFilesSince retrieves the list of file paths that have changed in the specified repositories
 // within the specified time frame. The function iterates over repositories defined in the GitHub configuration
 // and uses the GitHub commit operations client to fetch the commits and commit details for each repository.
 // It aggregates the file paths from all repositories into a single Paths object. The function filters these file
@@ -227,7 +227,7 @@ func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
 // Usage:
 //
 //	const sinceHours = 24
-//	changedFiles, err := c.GetChangedFilePathsSince(sinceHours)
+//	changedFiles, err := c.GetChangedFilesSince(sinceHours)
 //	if err != nil {
 //	    log.Fatal(err)
 //	}
@@ -235,15 +235,11 @@ func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
 //	fmt.Println("Added files:", changedFiles.Added)
 //	fmt.Println("Modified files:", changedFiles.Modified)
 //	fmt.Println("Removed files:", changedFiles.Removed)
-func (c *GitHub) GetChangedFilePathsSince(hoursSince int) (Paths, error) {
+func (c *GitHub) GetChangedFilesSince(since time.Time) (Paths, error) {
 	ctx := context.Background()
 
-	now := time.Now()
-	dayToHour := 24 * hoursSince
-	specifiedTime := now.Add(time.Hour * time.Duration(-dayToHour))
-
 	opt := &github.CommitsListOptions{
-		Since: specifiedTime,
+		Since: since,
 		Path:  c.Configuration.Filter.FilePath,
 		ListOptions: github.ListOptions{
 			PerPage: 100,
