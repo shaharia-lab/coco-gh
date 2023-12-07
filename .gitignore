@@ -1,0 +1,6 @@
+/.idea
+
+/out
+/vendor
+/coverage_*.txt
+/coverage.out
