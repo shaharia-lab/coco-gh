@@ -161,6 +161,7 @@ func NewGitHubClient(commitOpsClient CommitOpsClient, graphQLClient GraphQLClien
 // If there's an error during the process, it returns nil and the error.
 //
 // Usage:
+// ```
 //
 //	repos := []string{"repo1", "repo2", "repo3"}
 //	filePaths, err := GetFilePathsForRepositories(repos)
@@ -173,6 +174,8 @@ func NewGitHubClient(commitOpsClient CommitOpsClient, graphQLClient GraphQLClien
 //	        fmt.Println(path)
 //	    }
 //	}
+//
+// ```
 func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
 	var files []string
 	for _, repo := range c.Configuration.Repositories {
@@ -214,6 +217,7 @@ func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
 // - error: An error, if any occurred during the execution of the function.
 //
 // Usage:
+// ```
 //
 //	const sinceHours = "24"
 //	changedFiles, err := GetChangedFilePathsSince(sinceHours)
@@ -224,6 +228,7 @@ func (c *GitHub) GetFilePathsForRepositories() ([]string, error) {
 // fmt.Println(file.Added)
 // fmt.Println(file.Modified)
 // fmt.Println(file.Removed)
+// ```
 func (c *GitHub) GetChangedFilePathsSince(hoursSince int) (Paths, error) {
 	ctx := context.Background()
 
