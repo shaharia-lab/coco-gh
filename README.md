@@ -1,6 +1,24 @@
-# coco-gh
+<h1 align="center">coco-gh</h1>
+<p align="center">A Utility Library for Golang Developer</p>
 
-`coco-gh` is a Go library dedicated to collecting GitHub content.
+<p align="center">
+  <a href="https://pkg.go.dev/github.com/shaharia-lab/coco-gh"><img src="https://pkg.go.dev/badge/github.com/shaharia-lab/coco-gh.svg" height="20"/></a>
+</p><br/><br/>
+
+<p align="center">
+  <a href="https://github.com/shaharia-lab/coco-gh/actions/workflows/CI.yaml"><img src="https://github.com/shaharia-lab/coco-gh/actions/workflows/CI.yaml/badge.svg" height="20"/></a>
+  <a href="https://codecov.io/gh/shaharia-lab/coco-gh"><img src="https://codecov.io/gh/shaharia-lab/coco-gh/branch/master/graph/badge.svg?token=NKTKQ45HDN" height="20"/></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=shaharia-lab_coco-gh"><img src="https://sonarcloud.io/api/project_badges/measure?project=shaharia-lab_coco-gh&metric=reliability_rating" height="20"/></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=shaharia-lab_coco-gh"><img src="https://sonarcloud.io/api/project_badges/measure?project=shaharia-lab_coco-gh&metric=vulnerabilities" height="20"/></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=shaharia-lab_coco-gh"><img src="https://sonarcloud.io/api/project_badges/measure?project=shaharia-lab_coco-gh&metric=security_rating" height="20"/></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=shaharia-lab_coco-gh"><img src="https://sonarcloud.io/api/project_badges/measure?project=shaharia-lab_coco-gh&metric=sqale_rating" height="20"/></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=shaharia-lab_coco-gh"><img src="https://sonarcloud.io/api/project_badges/measure?project=shaharia-lab_coco-gh&metric=code_smells" height="20"/></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=shaharia-lab_coco-gh"><img src="https://sonarcloud.io/api/project_badges/measure?project=shaharia-lab_coco-gh&metric=ncloc" height="20"/></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=shaharia-lab_coco-gh"><img src="https://sonarcloud.io/api/project_badges/measure?project=shaharia-lab_coco-gh&metric=alert_status" height="20"/></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=shaharia-lab_coco-gh"><img src="https://sonarcloud.io/api/project_badges/measure?project=shaharia-lab_coco-gh&metric=duplicated_lines_density" height="20"/></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=shaharia-lab_coco-gh"><img src="https://sonarcloud.io/api/project_badges/measure?project=shaharia-lab_coco-gh&metric=bugs" height="20"/></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=shaharia-lab_coco-gh"><img src="https://sonarcloud.io/api/project_badges/measure?project=shaharia-lab_coco-gh&metric=sqale_index" height="20"/></a>
+</p><br/><br/>
 
 ## Features
 
