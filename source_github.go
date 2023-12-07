@@ -1,3 +1,4 @@
+// Package cocogh to collect GitHub contents
 package cocogh
 
 import (
