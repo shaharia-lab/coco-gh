@@ -34,13 +34,19 @@ type GitHubConfig struct {
 
 // GitHub stores a repo's GitHub client and its related configurations.
 type GitHub struct {
-	Client        Client
 	Configuration GitHubConfig
+
+	graphQLClient GraphQLClient
+	restClient    RESTClient
 }
 
-// Client is an interface to help test the GitHub Client.
-type Client interface {
+// GraphQLClient is an interface to help test the GitHub GraphQLClient.
+type GraphQLClient interface {
 	Query(ctx context.Context, q interface{}, variables map[string]interface{}) error
+}
+
+// RESTClient is an interface to help test the GitHub GraphQLClient.
+type RESTClient interface {
 	ListCommits(ctx context.Context, owner, repo string, opts *github.CommitsListOptions) ([]*github.RepositoryCommit, *github.Response, error)
 	GetCommit(ctx context.Context, owner, repo, sha string, opts *github.ListOptions) (*github.RepositoryCommit, *github.Response, error)
 }
@@ -60,10 +66,11 @@ type GHQueryForListFiles struct {
 	} `graphql:"repository(owner: $owner, name: $name)"`
 }
 
-// NewGitHubClient creates a new GitHub with the given Client and configuration.
-func NewGitHubClient(ghClient Client, configuration GitHubConfig) *GitHub {
+// NewGitHubClient creates a new GitHub with the given GraphQLClient and configuration.
+func NewGitHubClient(restClient RESTClient, graphQLClient GraphQLClient, configuration GitHubConfig) *GitHub {
 	return &GitHub{
-		Client:        ghClient,
+		restClient:    restClient,
+		graphQLClient: graphQLClient,
 		Configuration: configuration,
 	}
 }
@@ -134,7 +141,7 @@ func (c *GitHub) getFilePathsForRepo(owner, name, expression string) ([]string, 
 		"expression": githubv4.String(expression),
 	}
 
-	err := c.Client.Query(context.Background(), &query, variables)
+	err := c.graphQLClient.Query(context.Background(), &query, variables)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +176,7 @@ func (c *GitHub) hasFileType(fileName string, fileTypes []string) bool {
 func (c *GitHub) getChangedFilePathsForRepo(ctx context.Context, repo string, opt *github.CommitsListOptions) (Paths, error) {
 	var paths Paths
 
-	commits, _, err := c.Client.ListCommits(ctx, c.Configuration.Owner, repo, opt)
+	commits, _, err := c.restClient.ListCommits(ctx, c.Configuration.Owner, repo, opt)
 	if err != nil {
 		return paths, err
 	}
@@ -177,7 +184,7 @@ func (c *GitHub) getChangedFilePathsForRepo(ctx context.Context, repo string, op
 	directory := c.Configuration.Filter.FilePath
 
 	for _, commit := range commits {
-		commitDetails, _, err := c.Client.GetCommit(ctx, c.Configuration.Owner, repo, *commit.SHA, nil)
+		commitDetails, _, err := c.restClient.GetCommit(ctx, c.Configuration.Owner, repo, *commit.SHA, nil)
 		if err != nil {
 			return paths, err
 		}
